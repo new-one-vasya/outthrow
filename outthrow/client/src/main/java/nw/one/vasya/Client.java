@@ -8,11 +8,11 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import nw.one.vasya.handler.ClientHandler;
+import nw.one.vasya.handler.CollectHandler;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class Client {
 
     public static final int PORT = 8080;
     public static final String HOST = "localhost";
-    private static final List<String> COMMANDS = new ArrayList<>(List.of("5:hello", "4:cool", "6:haha"));
+    private static final List<String> COMMANDS = new ArrayList<>(List.of("5\nhello\n", "4\ncool\n", "6\nhaha\n"));
 
     public static void main(String[] args) throws Exception {
         EventLoopGroup workerGroup = new NioEventLoopGroup(1);
@@ -35,9 +35,10 @@ public class Client {
                 @Override
                 public void initChannel(SocketChannel ch) {
                     ch.pipeline().addLast(
-                            new LoggingHandler(LogLevel.INFO),
+                            new LineBasedFrameDecoder(32),
                             new StringDecoder(StandardCharsets.UTF_8),
                             new StringEncoder(StandardCharsets.UTF_8),
+                            new CollectHandler(),
                             new ClientHandler()
                     );
                 }
@@ -48,7 +49,7 @@ public class Client {
 
             for (String line : COMMANDS) {
                 lastWriteFuture = channel.writeAndFlush(line);
-                Thread.sleep(100); // Моё решение склеивания запросов в один пакет
+                Thread.sleep(100); // Обходное решение склеивания запросов в один пакет
             }
             channel.closeFuture().sync();
 

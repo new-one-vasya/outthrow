@@ -7,11 +7,13 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
+import nw.one.vasya.handler.CollectHandler;
 import nw.one.vasya.handler.ServerHandler;
 
 public class Server {
@@ -30,9 +32,10 @@ public class Server {
                         @Override
                         public void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(
-                                    new LoggingHandler(LogLevel.INFO),
+                                    new LineBasedFrameDecoder(32),
                                     new StringDecoder(CharsetUtil.UTF_8),
                                     new StringEncoder(CharsetUtil.UTF_8),
+                                    new CollectHandler(),
                                     new ServerHandler()
                             );
                         }
